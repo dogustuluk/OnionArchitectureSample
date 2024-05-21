@@ -15,5 +15,6 @@ namespace ETicaretAPI.Domain.Entities
 
 		//relationships
 		public ICollection<Order> Orders { get; set; }
+		public ICollection<ProductImageFile> ProductImageFiles { get; set; }
 	}
 }

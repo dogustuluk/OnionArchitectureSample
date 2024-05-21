@@ -99,42 +99,36 @@ namespace ETicaretAPI.API.Controllers
         }
 
         [HttpPost("[action]")]
-        public async Task<IActionResult> Upload()
+        public async Task<IActionResult> Upload(string id)
         {
-            //var datas = await _fileService.UploadAsync("resource/product-images", Request.Form.Files);
-            //await _productImageFileWriteRepository.AddRangeAsync(datas.Select(a => new ProductImageFile()
+            List<(string fileName, string pathOrContainerName)> result = await _storageService.UploadAsync("photo-image", Request.Form.Files); //upload async metodunu buradaki gibi tupple olarak göndermek doğru olmayabilir bunun yerine tip güvenli olarak view model şeklinde dön.
+
+            Product product = await _productReadRepository.GetByIdAsync(id);
+
+            //1.yol
+            //foreach (var a in result)
             //{
-            //    FileName = a.fileName,
-            //    Path = a.path
-            //}).ToList());
-            //await _productImageFileWriteRepository.SaveChanges();
+            //    product.ProductImageFiles.Add(new()
+            //    {
+            //        FileName = a.fileName,
+            //        Path = a.pathOrContainerName,
+            //        Storage = _storageService.StorageName,
+            //        Products = new List<Product>() { product }
 
-            //var datas = await _fileService.UploadAsync("resource/invoices", Request.Form.Files);
-            //await _invoiceFileWriteRepository.AddRangeAsync(datas.Select(a => new InvoiceFile()
-            //{
-            //    FileName = a.fileName,
-            //    Path = a.path,
-            //    Price = 10
+            //    });
+            //}
 
-            //}).ToList());
-            //await _invoiceFileWriteRepository.SaveChanges();
-            //var datas = await _fileService.UploadAsync("resource/file", Request.Form.Files);
-            //await _fileWriteRepository.AddRangeAsync(datas.Select(a => new ETicaretAPI.Domain.Entities.File()
-            //{
-            //    FileName = a.fileName,
-            //    Path = a.path,
-
-            //}).ToList());
-            //await _fileWriteRepository.SaveChanges();
-
-            var datas = await _storageService.UploadAsync("product-images", Request.Form.Files);
-            await _productImageFileWriteRepository.AddRangeAsync(datas.Select(a => new ProductImageFile
+            //2.yol
+            await _productImageFileWriteRepository.AddRangeAsync(result.Select(a => new ProductImageFile
             {
                 FileName = a.fileName,
                 Path = a.pathOrContainerName,
-                Storage = _storageService.StorageName
+                Storage = _storageService.StorageName,
+                Products = new List<Product>() { product}
             }).ToList());
+
             await _productImageFileWriteRepository.SaveChanges();
+
             return Ok();
         }
     }
