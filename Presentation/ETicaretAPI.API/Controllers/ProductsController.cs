@@ -127,7 +127,7 @@ namespace ETicaretAPI.API.Controllers
             //}).ToList());
             //await _fileWriteRepository.SaveChanges();
 
-            var datas = await _storageService.UploadAsync("resource/product-images", Request.Form.Files);
+            var datas = await _storageService.UploadAsync("product-images", Request.Form.Files);
             await _productImageFileWriteRepository.AddRangeAsync(datas.Select(a => new ProductImageFile
             {
                 FileName = a.fileName,
