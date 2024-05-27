@@ -1,4 +1,4 @@
-﻿using ETicaretAPI.Application.Abstractions;
+﻿using ETicaretAPI.Application.Abstractions.Storage;
 using ETicaretAPI.Application.Repositories;
 using MediatR;
 
