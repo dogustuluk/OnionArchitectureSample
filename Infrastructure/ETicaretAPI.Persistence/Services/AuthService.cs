@@ -8,6 +8,7 @@ using ETicaretAPI.Domain.Entities.Identity;
 using Google.Apis.Auth;
 using MediatR;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json;
 
@@ -20,14 +21,16 @@ namespace ETicaretAPI.Persistence.Services
         readonly UserManager<AppUser> _userManager;
         readonly ITokenHandler _tokenHandler;
         readonly SignInManager<AppUser> _signInManager;
+        readonly IUserService _userService;
 
-        public AuthService(HttpClient httpClient, IConfiguration configuration, IHttpClientFactory httpClientFactory, UserManager<Domain.Entities.Identity.AppUser> userManager, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager)
+        public AuthService(HttpClient httpClient, IConfiguration configuration, IHttpClientFactory httpClientFactory, UserManager<Domain.Entities.Identity.AppUser> userManager, ITokenHandler tokenHandler, SignInManager<AppUser> signInManager, IUserService userService)
         {
             _httpClient = httpClientFactory.CreateClient();
             _configuration = configuration;
             _userManager = userManager;
             _tokenHandler = tokenHandler;
             _signInManager = signInManager;
+            _userService = userService;
         }
 
         public async Task<Token> FacebookLoginAsync(string authToken, int accessTokenLifeTime)
@@ -71,23 +74,37 @@ namespace ETicaretAPI.Persistence.Services
             return await CreateUserExternalAsync(user, payload.Email, payload.Name, info, accessTokenLifeTime);
         }
 
-        public async Task<Token> LoginAsync(string UserNameOrEmail, string Password, int accessTokenLifeTime)
+        public async Task<Token> LoginAsync(string userNameOrEmail, string password, int accessTokenLifeTime)
         {
-            AppUser? user = await _userManager.FindByNameAsync(UserNameOrEmail);
+            AppUser? user = await _userManager.FindByNameAsync(userNameOrEmail);
             if (user == null)
-                user = await _userManager.FindByEmailAsync(UserNameOrEmail);
+                user = await _userManager.FindByEmailAsync(userNameOrEmail);
 
             if (user == null)
                 throw new UserNotFoundException();
 
-            SignInResult result = await _signInManager.CheckPasswordSignInAsync(user, Password, false);
+            SignInResult result = await _signInManager.CheckPasswordSignInAsync(user, password, false);
             if (result.Succeeded)
             {
                 Token token = _tokenHandler.CreateAccessToken(accessTokenLifeTime);
-
+                //refresh token opt.
+                await _userService.UpdateRefreshToken(token.RefreshToken, user, token.Expiration, 15);
                 return token;
             }
             throw new AuthenticationErrorException();
+        }
+
+        public async Task<Token> RefreshTokenLoginAsync(string refreshToken)
+        {
+            AppUser? user = await _userManager.Users.FirstOrDefaultAsync(a => a.RefreshToken == refreshToken);
+            if (user != null && user?.RefreshTokenEndDate > DateTime.UtcNow)
+            {
+                Token token = _tokenHandler.CreateAccessToken(15);
+                await _userService.UpdateRefreshToken(token.RefreshToken, user, token.Expiration, 15);
+                return token;
+            }
+            else
+                throw new UserNotFoundException();
         }
 
         private async Task<Token> CreateUserExternalAsync(AppUser user, string email, string name, UserLoginInfo info, int accessTokenLifeTime)
@@ -115,6 +132,9 @@ namespace ETicaretAPI.Persistence.Services
                 await _userManager.AddLoginAsync(user, info);
                 //kullanıcıyı yetkilendirme işlemleri yapılmalı ardından
                 Token token = _tokenHandler.CreateAccessToken(accessTokenLifeTime);
+                //refresh token opt.
+                await _userService.UpdateRefreshToken(token.RefreshToken, user, token.Expiration, 15);
+
                 return token;
             }
             throw new Exception("invalid external authentication");
