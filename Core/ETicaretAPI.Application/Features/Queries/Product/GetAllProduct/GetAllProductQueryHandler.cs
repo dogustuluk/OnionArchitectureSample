@@ -1,5 +1,6 @@
 ﻿using ETicaretAPI.Application.Repositories;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace ETicaretAPI.Application.Features.Queries.Product.GetAllProduct
@@ -17,22 +18,25 @@ namespace ETicaretAPI.Application.Features.Queries.Product.GetAllProduct
         public async Task<GetAllProductQueryResponse> Handle(GetAllProductQueryRequest request, CancellationToken cancellationToken)
         {
             //throw new Exception("test!! global exception handler");
-            var totalCount = _productReadRepository.GetAll(false).Count();
-            var products = _productReadRepository.GetAll(false).Skip(request.Page * request.Size).Take(request.Size).Select(a => new
+            var totalProductCount = _productReadRepository.GetAll(false).Count();
+            var products = _productReadRepository.GetAll(false).Skip(request.Page * request.Size).Take(request.Size)
+                .Include(a => a.ProductImageFiles)
+                .Select(a => new
             {
                 a.Id,
                 a.Name,
                 a.Price,
                 a.Stock,
                 a.CreatedDate,
-                a.UpdatedDate
+                a.UpdatedDate,
+                a.ProductImageFiles
             }).ToList(); //track etmeye gerek yok çünkü üzerinde işlem yapılmıyor sadece kullanıcıya sunuluyor
             _logger.LogInformation("Tüm product'lar listelendi");
 
             return new()
             {
                 Products = products,
-                TotalCount = totalCount
+                TotalProductCount = totalProductCount
             };
 
 
