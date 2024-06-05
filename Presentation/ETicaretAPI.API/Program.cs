@@ -6,6 +6,7 @@ using ETicaretAPI.Infrastructure;
 using ETicaretAPI.Infrastructure.Filters;
 using ETicaretAPI.Infrastructure.Services.Storage.Azure;
 using ETicaretAPI.Persistence;
+using ETicaretAPI.SignalR;
 using FluentValidation.AspNetCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.HttpLogging;
@@ -22,6 +23,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddPersistenceServices();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddApplicationServices();
+builder.Services.AddSignalRServices();
 
 //dosya yönetimi storage mekanizmasý
 builder.Services.AddStorage<AzureStorage>();
@@ -30,7 +32,7 @@ builder.Services.AddStorage<AzureStorage>();
 
 //cors politikasý belirleme
 //builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.AllowAnyHeader().AllowAnyMethod().AllowAnyOrigin())); //bu þekilde her istek gelecektir. istenilen durum deðil.
-builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod()));
+builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.WithOrigins("http://localhost:4200", "https://localhost:4200").AllowAnyHeader().AllowAnyMethod().AllowCredentials()));
 
 //log
 Logger log = new LoggerConfiguration()
@@ -131,5 +133,8 @@ app.Use(async (context, next) =>
 });
 
 app.MapControllers();
+
+//signalR hub'larý tanýtýlmalý
+app.MapHubs();
 
 app.Run();
