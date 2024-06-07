@@ -15,5 +15,6 @@ namespace ETicaretAPI.Domain.Entities
 		//relationships
 		public ICollection<Product> Products { get; set; }
 		public Customer Customer { get; set; }
+		public Basket Basket { get; set; }
 	}
 }

@@ -20,6 +20,7 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddHttpContextAccessor(); //bu servis client'tan gelen requestler sonucu oluþan httpcontext nesnesine katmanlardaki class'lar üzerinden(bussiness logic'ler) eriþmemizi saðlamaktadýr.
 builder.Services.AddPersistenceServices();
 builder.Services.AddInfrastructureServices();
 builder.Services.AddApplicationServices();
