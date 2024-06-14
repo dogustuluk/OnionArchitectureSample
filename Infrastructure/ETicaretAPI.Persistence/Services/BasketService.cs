@@ -119,5 +119,14 @@ namespace ETicaretAPI.Persistence.Services
                 await _basketItemWriteRepository.SaveChanges();
             }
         }
+
+        public Basket? GetUserActiveBasket
+        {
+            get
+            {
+                Basket? basket = ContextUser().Result;
+                return basket;
+            }
+        }
     }
 }
