@@ -10,5 +10,6 @@ namespace ETicaretAPI.Application.Abstractions.Services
     public interface IOrderServices
     {
         Task CreateOrder(CreateOrder createOrder);
+        Task<ListOrder> GetAllOrdersAsync(int page, int size);
     }
 }

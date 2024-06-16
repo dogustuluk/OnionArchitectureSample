@@ -30,6 +30,9 @@ namespace ETicaretAPI.Persistence.Contexts
 		{
 			builder.Entity<Order>()
 				.HasKey(o => o.Id);
+			builder.Entity<Order>()
+				.HasIndex(o => o.OrderCode)
+				.IsUnique();
 
 			builder.Entity<Basket>()
 				.HasOne(b => b.Order)
